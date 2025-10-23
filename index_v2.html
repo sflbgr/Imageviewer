@@ -1,0 +1,289 @@
+<html>
+<head>
+	<style>
+		body {
+			background: #000;
+			font-family: "Courier";
+		}
+		#save {
+			position: fixed;
+			top: 5px;
+			right: 5px;
+			width: 80px;
+			height: 30px;
+			background-color: #ececec;
+			z-index: 999;
+			text-align: center;
+			cursor: pointer;
+			padding-top: 10px;
+		}
+		#droparea {
+			position: relative;
+			width: 99%;
+			height: 99%;
+			background-color: #000;	
+		}
+		#wrapper {
+			width: 540px;
+			position: relative;
+			margin: 0 auto;
+			height: 960px;
+			/*overflow: hidden;*/
+		}
+		#my_image {
+			position: absolute;
+			top: 0;
+			left: 0;
+			display: block;
+			height: 100%;
+			transform: rotate(0deg);
+			display: none;
+		}
+		#background {
+			display: block;
+			position: absolute;
+			top: 0;	
+			width: 540px;			
+			height: 960px;
+		}
+		#filename {
+			position: fixed;
+			left: 5px;
+			bottom: 5px;
+			color: #fff;
+		}
+		.output-canvas{
+			position: absolute;
+			top: 10px;
+			left: 10px;
+			width: 230px;
+			border: 1px solid #fff;
+		}
+	</style>
+	<script src="jquery-3.3.1.min.js"></script>
+	<script>
+		
+		var filename, url, startX, startY, filenameLabel, wrapper
+		var droparea, image, save, pos, height, width, natWidth, natHeight
+		var diffX, diffX, startX, startY, x, f, newTop, newLeft, mouseX, mouseY, fx, fy, ratio
+		var sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight, canvas, context, link, resize, deg
+		var cWidth, cHeight, eWidth, eHeight, df
+		var drawToCanvas, moveInCanvas, rotateInCanvas, zoomInCanvas
+		
+		let move = false, rotate = false
+		
+		drawToCanvas = function() {
+			
+			deg = 0
+			
+			natWidth = image[0].naturalWidth
+			natHeight = image[0].naturalHeight
+			
+			ratio = natWidth / natHeight
+			
+			sX = 0
+			sY = 0
+			sWidth = natWidth
+			sHeight = natHeight
+			
+			if ( (natWidth / natHeight) < (16 / 9) ) {
+				cHeight = natHeight
+				cWidth = cHeight / 16 * 9
+				dX = -((natWidth - cWidth) / 2)
+				dY = 0
+				dWidth = sWidth
+				dHeight = sHeight
+			} else {
+				cWidth = natWidth
+				cHeight = cWidth / 9 * 16
+				dX = 0
+				dY = -((natHeight - cHeight) / 2)
+				dWidth = sWidth
+				dHeight = sHeight
+			}
+			
+			canvas[0].width = cWidth
+			canvas[0].height = cHeight
+			
+			df = cHeight / eHeight
+			
+			context.clearRect(0, 0, cWidth, cHeight)
+			context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+			
+		}
+		
+		moveInCanvas = function(diffX, diffY) {
+			
+			dX = dX + (diffX * df)
+			dY = dY + (diffY * df)
+			
+			context.clearRect(0, 0, cWidth, cHeight)
+			context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+			
+		}
+		
+		zoomInCanvas = function(event) {
+			
+			x = 20
+			if (event.altKey) {
+				x = 1
+			}
+			if (event.shiftKey) {
+				x = 100
+			}
+			x *= df
+			
+			mouseX = (event.pageX - canvas.offset().left) * df
+			mouseY = (event.pageY - canvas.offset().top) * df
+	
+			fx = (mouseX - dX) / dWidth
+			fy = (mouseY - dY) / dHeight
+			
+			if (event.originalEvent.wheelDelta > 0) {
+				dHeight = dHeight + x
+				diffX = (dHeight * ratio) - dWidth
+				dWidth = dHeight * ratio
+				dY = dY - (x * fy)
+				dX = dX - (diffX * fx)
+			} else {
+				dHeight = dHeight - x
+				diffX = dWidth - (dHeight * ratio)
+				dWidth = dHeight * ratio
+				dY = dY + (x * fy)
+				dX = dX + (diffX * fx)
+			}
+			
+			context.clearRect(0, 0, cWidth, cHeight)
+			context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+			
+		}
+		
+		rotateInCanvas = function(diffX) {
+			
+			deg = (diffX > 0) ? 0.1 : -0.1
+			
+			context.translate(cWidth / 2, cHeight / 2)
+			context.rotate(deg * Math.PI / 180)
+			context.translate(-(cWidth / 2), -(cHeight / 2))
+			
+			context.clearRect(0, 0, cWidth, cHeight)
+			context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+			
+		}
+		
+		jQuery(document).ready(function() {
+			
+			droparea = jQuery("#droparea")
+			image = jQuery("#my_image")
+			save = jQuery("#save")
+			filenameLabel = jQuery("#filename")
+			wrapper = jQuery("#wrapper")
+			
+			canvas = jQuery("#edit-canvas")
+			context = canvas[0].getContext("2d")
+			
+			resize = function() {
+				eHeight = droparea.height()
+				eWidth = eHeight / 16 * 9
+				jQuery("#wrapper, #background, #edit-canvas").css({
+					height: eHeight + "px",
+					width: eWidth + "px"
+				})
+			}
+			jQuery(window).on("resize", function() {
+				resize()
+			})
+			resize()
+			
+			jQuery(window).on("contextmenu", function() {
+				return false
+			})
+			
+			droparea.on("drop dragend", function(event) {
+				if (!move) {
+					event.preventDefault()
+					event.stopPropagation()
+					filename = event.originalEvent.dataTransfer.files[0].name
+					filenameLabel.html(filename)
+					
+					url = URL.createObjectURL(event.originalEvent.dataTransfer.files[0])
+					image.on("load", function() {
+						drawToCanvas()
+					})
+					image.attr("src", url)
+					
+					return false
+				}
+			}).on("dragover", function(event) {
+				if (!move) {
+					event.preventDefault()
+					event.stopPropagation()
+				}
+			}).on("dragleave dragend", function(event) {
+				if (!move) {
+					event.preventDefault()
+					event.stopPropagation()
+				}
+			})
+			
+			jQuery("body").on("mousedown", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				startX = event.pageX
+				startY = event.pageY
+				if (event.which === 1) {
+					move = true
+				} else if (event.which === 3) {
+					rotate = true
+				}
+			}).on("mousemove", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				diffX = event.pageX - startX
+				diffY = event.pageY - startY
+				startX = event.pageX
+				startY = event.pageY
+				if (move) {
+					moveInCanvas(diffX, diffY)
+				} else if (rotate) {
+					rotateInCanvas(diffX)
+				}
+			}).on("mouseup", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				move = false
+				rotate = false
+			}).on("mousewheel", function(event) {
+				zoomInCanvas(event)
+			})
+			
+			save.on("click", function() {
+				
+				link = document.createElement("a")
+				link.download = filename
+				
+				canvas[0].toBlob(function(blob) {
+					link.href = URL.createObjectURL(blob)
+					link.click()
+				}, "image/jpeg", 0.95)
+				
+				
+			})
+			
+			
+		})
+		
+	</script>
+</head>
+<body>
+	<div id="save">Save</div>
+	<div id="droparea">
+		<div id="wrapper">
+		<img id="my_image" src="1266037.jpg">
+		<canvas id="edit-canvas"></canvas>
+		<img id="background" src="background.png">
+		</div>
+	</div>
+	<div id="filename"></div>
+</body>
+</html>

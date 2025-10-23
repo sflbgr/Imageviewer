@@ -1,0 +1,386 @@
+<html>
+<head>
+	<style>
+		html {
+			border: 0;
+			margin: 0;
+		}
+		body {
+			background: #fff;
+			border: 0;
+			margin: 0;
+			padding: 0;
+			font-family: "Courier";
+		}
+		#save {
+			position: fixed;
+			top: 5px;
+			right: 5px;
+			width: 80px;
+			height: 30px;
+			background-color: #ececec;
+			z-index: 999;
+			text-align: center;
+			cursor: pointer;
+			padding-top: 10px;
+		}
+		#droparea {
+			position: relative;
+			width: 100%;
+			height: 100%;
+			margin: auto;
+			background-color: #000;	
+		}
+		#wrapper {
+			width: 1366px;
+			position: relative;
+			margin: 0 auto;
+			padding-top: 10px;
+			height: 768px;
+			/*overflow: hidden;*/
+		}
+		#my_image {
+			position: absolute;
+			top: 0;
+			left: 0;
+			display: block;
+			height: 100%;
+			transform: rotate(0deg);
+			display: none;
+		}
+		#filename {
+			position: fixed;
+			left: 5px;
+			bottom: 5px;
+			color: #fff;
+		}
+		#next-button, #prev-button {
+			position: absolute;
+			top: calc(50%);
+			width: 40px;
+			height: 70px;
+			background-color: #ececec;
+			cursor: pointer;
+		}
+		#next-button {
+			right: 0;
+			border-top-left-radius: 30px;
+			border-bottom-left-radius: 30px;
+		}
+		#prev-button {
+			left: 0;
+			border-top-right-radius: 30px;
+			border-bottom-right-radius: 30px;
+		}
+		#taskbar {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 1366px;
+			height: 40px;
+			background-color: #484848;
+			opacity: 0.5;
+		}
+		#edit-canvas {
+			border: 1px solid #757575;
+		}
+		
+	</style>
+	<script src="jquery-3.3.1.min.js"></script>
+	<script>
+		
+		var filename, url, startX, startY, filenameLabel, wrapper, fileList, fileListIndex, nextButton, prevButton
+		var droparea, image, save, pos, height, width, natWidth, natHeight
+		var diffX, diffX, startX, startY, x, f, newTop, newLeft, mouseX, mouseY, fx, fy, ratio
+		var sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight, canvas, context, link, resize, deg
+		var cWidth, cHeight, eWidth, eHeight, df
+		var drawToCanvas, moveInCanvas, rotateInCanvas, zoomInCanvas, showFile
+		
+		let move = false, rotate = false
+		
+		drawToCanvas = function() {
+			
+			deg = 0
+			
+			natWidth = image[0].naturalWidth
+			natHeight = image[0].naturalHeight
+			
+			ratio = natWidth / natHeight
+			
+			sX = 0
+			sY = 0
+			sWidth = natWidth
+			sHeight = natHeight
+			
+			if ( (natWidth / natHeight) > (16 / 9) ) {
+				cHeight = natHeight
+				cWidth = cHeight / 9 * 16
+				dX = -((natWidth - cWidth) / 2)
+				dY = 0
+				dWidth = sWidth
+				dHeight = sHeight
+			} else {
+				cWidth = natWidth
+				cHeight = cWidth / 16 * 9
+				dX = 0
+				dY = -((natHeight - cHeight) / 2)
+				dWidth = sWidth
+				dHeight = sHeight
+			}
+			
+			canvas[0].width = cWidth
+			canvas[0].height = cHeight
+			
+			df = cHeight / eHeight
+			
+			context.clearRect(0, 0, cWidth, cHeight)
+			context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+			
+		}
+		
+		moveInCanvas = function(diffX, diffY) {
+			
+			dX = dX + (diffX * df)
+			dY = dY + (diffY * df)
+			
+			context.clearRect(0, 0, cWidth, cHeight)
+			context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+			
+		}
+		
+		zoomInCanvas = function(event) {
+			
+			x = 20
+			if (event.altKey) {
+				x = 1
+			}
+			if (event.shiftKey) {
+				x = 100
+			}
+			x *= df
+			
+			mouseX = (event.pageX - canvas.offset().left) * df
+			mouseY = (event.pageY - canvas.offset().top) * df
+	
+			fx = (mouseX - dX) / dWidth
+			fy = (mouseY - dY) / dHeight
+			
+			if (event.originalEvent.wheelDelta > 0) {
+				dHeight = dHeight + x
+				diffX = (dHeight * ratio) - dWidth
+				dWidth = dHeight * ratio
+				dY = dY - (x * fy)
+				dX = dX - (diffX * fx)
+			} else {
+				dHeight = dHeight - x
+				diffX = dWidth - (dHeight * ratio)
+				dWidth = dHeight * ratio
+				dY = dY + (x * fy)
+				dX = dX + (diffX * fx)
+			}
+			
+			context.clearRect(0, 0, cWidth, cHeight)
+			context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+			
+		}
+		
+		rotateInCanvas = function(diffX) {
+			
+			x = 0.1
+			if (event.altKey) {
+				x = 0.5
+			}
+			if (event.shiftKey) {
+				x = 1
+			}
+			deg = (diffX > 0) ? x : -x
+			
+			context.translate(cWidth / 2, cHeight / 2)
+			context.rotate(deg * Math.PI / 180)
+			context.translate(-(cWidth / 2), -(cHeight / 2))
+			
+			context.clearRect(0, 0, cWidth, cHeight)
+			context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+			
+		}
+		
+		showFile = function() {
+			
+			if (fileListIndex >= 0 && fileListIndex < fileList.length) {
+				filename = fileList[fileListIndex].name
+				filenameLabel.html(filename)
+				
+				url = URL.createObjectURL(fileList[fileListIndex])
+				image.on("load", function() {
+					drawToCanvas()
+				})
+				image.attr("src", url)
+			}
+			
+		}
+		
+		jQuery(document).ready(function() {
+			
+			droparea = jQuery("#droparea")
+			image = jQuery("#my_image")
+			save = jQuery("#save")
+			filenameLabel = jQuery("#filename")
+			wrapper = jQuery("#wrapper")
+			nextButton = jQuery("#next-button")
+			prevButton = jQuery("#prev-button")
+			
+			canvas = jQuery("#edit-canvas")
+			context = canvas[0].getContext("2d")
+			
+			resize = function() {
+				console.log("window width", jQuery("body").width(), window.innerWidth)
+				eWidth = jQuery("body").width() - 60
+				eHeight = eWidth / 16 * 9
+				console.log(eWidth, eHeight)
+				jQuery("#wrapper, #edit-canvas").css({
+					height: eHeight + "px",
+					width: eWidth + "px"
+				})
+				jQuery("#taskbar").css({
+					width: eWidth + "px"
+				})
+			}
+			jQuery(window).on("resize", function() {
+				resize()
+			})
+			resize()
+			
+			jQuery(window).on("contextmenu", function() {
+				return false
+			})
+			
+			droparea.on("drop dragend", function(event) {
+				if (!move) {
+					event.preventDefault()
+					event.stopPropagation()
+					
+					fileList = event.originalEvent.dataTransfer.files
+					fileListIndex = 0
+					
+					showFile()
+					
+					return false
+					
+					
+				}
+			}).on("dragover", function(event) {
+				if (!move) {
+					event.preventDefault()
+					event.stopPropagation()
+				}
+			}).on("dragleave dragend", function(event) {
+				if (!move) {
+					event.preventDefault()
+					event.stopPropagation()
+				}
+			})
+			
+			jQuery("body").on("mousedown", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				startX = event.pageX
+				startY = event.pageY
+				if (event.which === 1) {
+					move = true
+				} else if (event.which === 3) {
+					rotate = true
+				}
+			}).on("mousemove", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				diffX = event.pageX - startX
+				diffY = event.pageY - startY
+				startX = event.pageX
+				startY = event.pageY
+				if (move) {
+					moveInCanvas(diffX, diffY)
+				} else if (rotate) {
+					rotateInCanvas(diffX)
+				}
+			}).on("mouseup", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				move = false
+				rotate = false
+			}).on("mousewheel", function(event) {
+				zoomInCanvas(event)
+			})
+			
+			var saveClick = function() {
+				link = document.createElement("a")
+				link.download = filename
+				
+				canvas[0].toBlob(function(blob) {
+					link.href = URL.createObjectURL(blob)
+					link.click()
+				}, "image/jpeg", 0.95)
+			}
+			
+			save.on("click", saveClick)
+			
+			nextButton.on("click", function() {
+				fileListIndex++
+				showFile()
+			})
+			prevButton.on("click", function() {
+				fileListIndex--
+				showFile()
+			})
+			
+			jQuery("body").on("keydown", function(event) {
+				if (event.originalEvent.key == "F4") {
+					if (outputText.val().indexOf(filename) === -1) {
+						outputText.append(filename + "\n")
+					}
+				}
+				if (event.originalEvent.key == "s") {
+					saveClick()
+				}
+				if (event.originalEvent.key == "ArrowRight") {
+					fileListIndex++
+					showFile()
+				}
+				if (event.originalEvent.key == "ArrowLeft") {
+					fileListIndex--
+					showFile()
+				}
+				if (event.originalEvent.key == "ArrowUp") {
+					if (event.shiftKey) {
+						moveInCanvas(0, 5)
+					} else {
+						moveInCanvas(0, 1)
+					}
+				}
+				if (event.originalEvent.key == "ArrowDown") {
+					if (event.shiftKey) {
+						moveInCanvas(0, -5)
+					} else {
+						moveInCanvas(0, -1)
+					}
+				}
+			})			
+			
+		})
+		
+	</script>
+</head>
+<body>
+	<div id="save">Save</div>
+	<div id="droparea">
+		<div id="wrapper">
+			<img id="my_image" src="1266037.jpg">
+			<canvas id="edit-canvas"></canvas>
+			<div id="taskbar"></div>
+		</div>
+	</div>
+	<div id="prev-button"></div>
+	<div id="next-button"></div>
+	<div id="filename"></div>
+	
+</body>
+</html>

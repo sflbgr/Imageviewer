@@ -1,0 +1,279 @@
+<html>
+<head>
+	<style>
+		body {
+			background: #000;
+			font-family: "Courier";
+		}
+		#save {
+			position: fixed;
+			top: 5px;
+			right: 5px;
+			width: 80px;
+			height: 30px;
+			background-color: #ececec;
+			z-index: 999;
+			text-align: center;
+			cursor: pointer;
+			padding-top: 10px;
+		}
+		#droparea {
+			position: relative;
+			width: 99%;
+			height: 99%;
+			background-color: #000;	
+		}
+		#wrapper {
+			width: 540px;
+			position: relative;
+			margin: 0 auto;
+			height: 960px;
+			overflow: hidden;
+		}
+		#my_image {
+			position: absolute;
+			top: 0;
+			left: 0;
+			display: block;
+			top: 0;		
+			height: 100%;
+		}
+		#background {
+			display: block;
+			position: absolute;
+			top: 0;	
+			width: 540px;			
+			height: 960px;
+		}
+		#filename {
+			position: fixed;
+			left: 5px;
+			bottom: 5px;
+			color: #fff;
+		}
+	</style>
+	<script src="jquery-3.3.1.min.js"></script>
+	<script>
+		
+		var filename, url, startX, startY, filenameLabel
+		var droparea, image, save, pos, height, width, natWidth, natHeight
+		var diffX, diffX, startX, startY, x, f, newTop, newLeft, mouseX, mouseY, fx, fy, ratio
+		var sX, sY, sWidth, sHeight, canvas, context, link, resize
+		let move = false
+		let noClick = false
+		let eWidth = 540, eHeight = 960
+		
+		
+
+		jQuery(document).ready(function() {
+			
+			droparea = jQuery("#droparea")
+			image = jQuery("#my_image")
+			save = jQuery("#save")
+			filenameLabel = jQuery("#filename")
+			
+			
+			resize = function() {
+				eHeight = droparea.height()
+				eWidth = eHeight / 16 * 9
+				jQuery("#wrapper, #background").css({
+					height: eHeight + "px",
+					width: eWidth + "px"
+				})
+			}
+			jQuery(window).on("resize", function() {
+				resize()
+			})
+			resize()
+			
+			
+			droparea.on("drop dragend", function(event) {
+				if (!move) {
+					event.preventDefault()
+					event.stopPropagation()
+					filename = event.originalEvent.dataTransfer.files[0].name
+					filenameLabel.html(filename)
+					
+					url = URL.createObjectURL(event.originalEvent.dataTransfer.files[0])
+					image.on("load", function() {
+						image.css({
+							height: "100%",
+							top: 0
+						})
+						width = image.width()
+						left = (width - eWidth) / 2
+						image.css({
+							left: -left + "px"
+						})
+					})
+					image.attr("src", url)
+					
+					return false
+				}
+			}).on("dragover", function(event) {
+				if (!move) {
+					event.preventDefault()
+					event.stopPropagation()
+				}
+			}).on("dragleave dragend", function(event) {
+				if (!move) {
+					event.preventDefault()
+					event.stopPropagation()
+				}
+			})
+			
+			jQuery("body").on("mousedown", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				startX = event.pageX
+				startY = event.pageY
+				move = true
+			}).on("mousemove", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				if (move) {
+					diffX = event.pageX - startX
+					diffY = event.pageY - startY
+					startX = event.pageX
+					startY = event.pageY
+					pos = image.position()
+					newTop = pos.top + diffY
+					newLeft = pos.left + diffX
+					if (newTop > 0) {
+						newTop = 0
+					}
+					if (newTop < -(image.height() - eHeight)) {
+						newTop = -(image.height() - eHeight)
+					}
+					if (newLeft > 0) {
+						newLeft = 0
+					}
+					if (newLeft < -(image.width() - eWidth)) {
+						newLeft = -(image.width() - eWidth)
+					}
+					image.css({
+						top: newTop + "px",
+						left: newLeft + "px"
+					})
+				}
+			}).on("mouseup", function(event) {
+				event.preventDefault()
+				event.stopPropagation()
+				move = false
+				noClick = true
+			}).on("mousewheel", function(event) {
+				x = 20
+				if (event.altKey) {
+					x = 1
+				}
+				if (event.shiftKey) {
+					x = 100
+				}
+				mouseX = event.pageX - image.offset().left
+				mouseY = event.pageY - image.offset().top
+				fx = mouseX / image.width()
+				fy = mouseY / image.height()
+				
+				ratio = image.width() / image.height()
+				
+				height = image.height()
+				pos = image.position()
+				if (event.originalEvent.wheelDelta > 0) {
+					height = height + x
+					width = height * ratio
+					newTop = pos.top - (x * fy)
+					diffX = width - image.width()
+					newLeft = pos.left - (diffX * fx)
+				} else {
+					height = height - x
+					width = height * ratio
+					newTop = pos.top + (x * fy)
+					diffX = image.width() - width
+					newLeft = pos.left + (diffX * fx)
+				}
+				
+				if (newTop > 0) {
+					newTop = 0
+				}
+			/*	if (newTop < -(image.height() - eHeight)) {
+					newTop = -(image.height() - eHeight)
+				} */
+				if (newLeft > 0) {
+					newLeft = 0
+				}
+				if (newLeft < -(image.width() - eWidth)) {
+					newLeft = -(image.width() - eWidth)
+				}
+				if (height < eHeight) {
+					height = eHeight
+					newTop = pos.top
+					newLeft = pos.left
+				}
+				if (height + newTop < eHeight) {
+					newTop = eHeight - height
+				}
+				
+				if (height != image.height()) {
+					image.css({
+						height: height + "px",
+						top: newTop + "px",
+						left: newLeft + "px"
+					})
+					if (image.width() + newLeft < eWidth) {
+						newLeft = eWidth - image.width()
+						image.css({left: newLeft})
+					}
+				}
+				
+				
+			})
+			
+			save.on("click", function() {
+				
+				pos = image.position()
+				width = image.width()
+				height = image.height()
+				natWidth = image[0].naturalWidth
+				natHeight = image[0].naturalHeight
+				f = height / natHeight
+				
+				sX = Math.abs(pos.left / f)
+				sY = Math.abs(pos.top / f)
+				sWidth = eWidth / f
+				sHeight = eHeight / f
+				
+				canvas = document.createElement("canvas")
+				context = canvas.getContext("2d")
+				
+				canvas.width = sWidth
+				canvas.height = sHeight
+				
+				context.drawImage(image[0], sX, sY, sWidth, sHeight, 0, 0, sWidth, sHeight)
+				
+				link = document.createElement("a")
+				link.download = filename
+				
+				canvas.toBlob(function(blob) {
+					link.href = URL.createObjectURL(blob)
+					link.click()
+				}, "image/jpeg", 0.95)
+				
+				
+			})
+			
+			
+		})
+		
+	</script>
+</head>
+<body>
+	<div id="save">Save</div>
+	<div id="droparea">
+		<div id="wrapper">
+		<img id="my_image" src="1266037.jpg">
+		<img id="background" src="backgroundS20FE.png">
+		</div>
+	</div>
+	<div id="filename"></div>
+</body>
+</html>

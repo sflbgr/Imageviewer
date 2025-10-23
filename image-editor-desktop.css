@@ -1,0 +1,134 @@
+html {
+    border: 0;
+    margin: 0;
+}
+body {
+    background: #000;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    font-family: "Courier";
+    overflow: hidden;
+}
+#droparea {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    margin: auto;
+    background-color: #000;	
+}
+#wrapper {
+    width: 1920px;
+    position: relative;
+    margin: 0 auto;
+    padding-top: 17px;
+    height: 1080px;
+    /*overflow: hidden;*/
+}
+#my_image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    height: 100%;
+    transform: rotate(0deg);
+    display: none;
+}
+#filename {
+    position: fixed;
+    left: 5px;
+    bottom: 5px;
+    color: #fff;
+}
+#image-number {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #ccc;
+    z-index: 998;
+}
+
+.frame {
+    position: absolute;
+    top: 0;
+    width: 75px;
+    height: 15px;
+    opacity: 0.8;
+    z-index: 999;
+    font-size: 10px;
+    font-family: Arial;
+    text-align: center;
+    line-height: 15px;
+}
+#frame-mode {
+    left: 60px;
+    background-color: #0f0;
+}
+#frame-moved {
+    left: 170px;
+    background-color: #ff0;
+}
+#frame-mode.hidden,
+#frame-move-mode.hidden,
+#frame-moved.hidden {
+    display: none;
+}
+
+#next-button, #prev-button {
+    position: absolute;
+    top: calc(50%);
+    width: 40px;
+    height: 70px;
+    background-color: #ececec;
+    cursor: pointer;
+}
+#taskbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 1920px;
+    height: 40px;
+    background-color: #484848;
+    opacity: 0.8;
+}
+#edit-canvas {
+    border: 1px solid #757575;
+}
+
+.line {
+    background-color: #2f2f2f30;
+}
+.line.hidden {
+    display: none;
+}
+
+#line-vert-1, #line-vert-2, #line-vert-3 {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+}
+#line-horz-1, #line-horz-2 {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+}
+#next-image-wrapper {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 150px;
+}
+
+body.fullscreen #wrapper {
+    padding-top: 0;
+}
+body.fullscreen #edit-canvas {
+    border: none;
+}
+body.fullscreen #image-number {
+    background-color: #484848;
+    opacity: 0.8;
+    padding: 3px;
+}

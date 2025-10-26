@@ -1,6 +1,6 @@
 var filename, url, startX, startY, filenameLabel, wrapper, fileList, fileListIndex, nextButton, prevButton
 var droparea, image, save, pos, height, width, natWidth, natHeight
-var diffX, diffX, startX, startY, x, f, newTop, newLeft, mouseX, mouseY, fx, fy, ratio
+var diffX, startX, startY, x, f, newTop, newLeft, mouseX, mouseY, fx, fy, ratio
 var sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight, canvas, context, link, resize, deg
 var cWidth, cHeight, eWidth, eHeight, df
 var drawToCanvas, moveInCanvas, rotateInCanvas, zoomInCanvas, showFile
@@ -29,8 +29,8 @@ drawToCanvas = function() {
     
     deg = 0
     
-    natWidth = image[0].naturalWidth
-    natHeight = image[0].naturalHeight
+    natWidth = image.naturalWidth
+    natHeight = image.naturalHeight
     
     ratio = natWidth / natHeight
     
@@ -55,13 +55,13 @@ drawToCanvas = function() {
         dHeight = sHeight
     }
     
-    canvas[0].width = cWidth
-    canvas[0].height = cHeight
+    canvas.width = cWidth
+    canvas.height = cHeight
     
     df = cHeight / eHeight
     
     context.clearRect(0, 0, cWidth, cHeight)
-    context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
     
 }
 
@@ -75,7 +75,7 @@ moveInCanvas = function(diffX, diffY) {
 	}
 	
     context.clearRect(0, 0, cWidth, cHeight)
-    context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
     
 }
 
@@ -90,13 +90,14 @@ zoomInCanvas = function(event) {
     }
     x *= df
     
-    mouseX = (event.pageX - canvas.offset().left) * df
-    mouseY = (event.pageY - canvas.offset().top) * df
+    const rect = canvas.getBoundingClientRect();
+    mouseX = (event.pageX - rect.left) * df;
+    mouseY = (event.pageY - rect.top) * df;
 
     fx = (mouseX - dX) / dWidth
     fy = (mouseY - dY) / dHeight
     
-    if (event.originalEvent.wheelDelta > 0) {
+    if (event.wheelDelta > 0) {
         dHeight = dHeight + x
         diffX = (dHeight * ratio) - dWidth
         dWidth = dHeight * ratio
@@ -111,7 +112,7 @@ zoomInCanvas = function(event) {
     }
     
     context.clearRect(0, 0, cWidth, cHeight)
-    context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
     
 }
 
@@ -137,7 +138,7 @@ rotateInCanvas = function(diffX, posY) {
     context.translate(-(cWidth / 2), -(cHeight / 2))
     
     context.clearRect(0, 0, cWidth, cHeight)
-    context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
     
 }
 
@@ -145,7 +146,7 @@ showFile = function() {
     
     if (fileListIndex >= 0 && fileListIndex < fileList.length) {
         filename = fileList[fileListIndex].name
-        filenameLabel.html(filename)
+        filenameLabel.innerHTML = filename
         
         if (url) {
             URL.revokeObjectURL(url)
@@ -153,16 +154,16 @@ showFile = function() {
         }
         
         url = URL.createObjectURL(fileList[fileListIndex])
-        image.on("load", function() {
+        image.addEventListener("load", function() {
             drawToCanvas()
         })
-        image.attr("src", url)
+        image.src = url
         
         if (!gridVisible) {
-            jQuery(".line").toggle("hidden")
+            document.querySelectorAll(".line").forEach(el => el.classList.toggle("hidden"));
             gridVisible = !gridVisible
         }
-        imageNumber.html((fileListIndex+1) + "/" + fileList.length)
+        imageNumber.innerHTML = ((fileListIndex+1) + "/" + fileList.length)
     }
     
 }
@@ -176,80 +177,78 @@ clearCanvas = function() {
 
 document.addEventListener("DOMContentLoaded", function() {
     
-    droparea = jQuery("#droparea")
-    image = jQuery("#my_image")
-    save = jQuery("#save")
-    filenameLabel = jQuery("#filename")
-    wrapper = jQuery("#wrapper")
-    nextButton = jQuery("#next-button")
-    prevButton = jQuery("#prev-button")
-    // outputText = jQuery("#output-text")
-    // copyButton = jQuery("#copy-filenames")
-    imageNumber = jQuery("#image-number")
-    // nextImageWrapper = jQuery("#next-image-wrapper")
+    droparea = document.querySelector("#droparea")
+    image = document.querySelector("#my_image")
+    save = document.querySelector("#save")
+    filenameLabel = document.querySelector("#filename")
+    wrapper = document.querySelector("#wrapper")
+    nextButton = document.querySelector("#next-button")
+    prevButton = document.querySelector("#prev-button")
+    // outputText = document.querySelector("#output-text")
+    // copyButton = document.querySelector("#copy-filenames")
+    imageNumber = document.querySelector("#image-number")
+    // nextImageWrapper = document.querySelector("#next-image-wrapper")
 
-    canvas = jQuery("#edit-canvas")
-    context = canvas[0].getContext("2d")
+    canvas = document.querySelector("#edit-canvas")
+    context = canvas.getContext("2d")
     
     resize = function() {
-        eHeight = droparea.height()
+        eHeight = droparea.clientHeight
         eWidth = eHeight / svh * svw
-        jQuery("#wrapper, #background, #edit-canvas").css({
-            height: eHeight + "px",
-            width: eWidth + "px"
-        })
-        jQuery("#line-vert-1").css({
-            left: eWidth / 3
-        })
-        jQuery("#line-vert-2").css({
-            left: eWidth / 2
-        })
-        jQuery("#line-vert-3").css({
-            left: eWidth / 3 * 2
-        })
-        jQuery("#line-horz-1").css({
-            top: eHeight / 3
-        })
-        jQuery("#line-horz-2").css({
-            top: eHeight / 3 * 2
-        })
+        
+        const elementsToResize = document.querySelectorAll("#wrapper, #background, #edit-canvas");
+        elementsToResize.forEach(el => {
+            el.style.height = eHeight + "px";
+            el.style.width = eWidth + "px";
+        });
+
+        document.querySelector("#line-vert-1").style.left = eWidth / 3 + "px";
+        document.querySelector("#line-vert-2").style.left = eWidth / 2 + "px";
+        document.querySelector("#line-vert-3").style.left = (eWidth / 3) * 2 + "px";
+        document.querySelector("#line-horz-1").style.top = eHeight / 3 + "px";
+        document.querySelector("#line-horz-2").style.top = (eHeight / 3) * 2 + "px";
     }
-    jQuery(window).on("resize", function() {
-        resize()
-    })
+    window.addEventListener("resize", resize);
     resize()
     
-    jQuery(window).on("contextmenu", function() {
+    window.addEventListener("contextmenu", function(event) {
+        event.preventDefault();
         return false
     })
     
-    droparea.on("drop dragend", function(event) {
+    droparea.addEventListener("drop", function(event) {
         if (!move) {
             event.preventDefault()
             event.stopPropagation()
             
-            fileList = event.originalEvent.dataTransfer.files
+            fileList = event.dataTransfer.files
             fileListIndex = 0
             
             showFile()
             
             return false
-            
-            
         }
-    }).on("dragover", function(event) {
+    });
+    droparea.addEventListener("dragend", function(event) {
         if (!move) {
             event.preventDefault()
             event.stopPropagation()
         }
-    }).on("dragleave dragend", function(event) {
+    });
+    droparea.addEventListener("dragover", function(event) {
         if (!move) {
             event.preventDefault()
             event.stopPropagation()
         }
-    })
+    });
+    droparea.addEventListener("dragleave", function(event) {
+        if (!move) {
+            event.preventDefault()
+            event.stopPropagation()
+        }
+    });
     
-    jQuery("body").on("mousedown", function(event) {
+    document.body.addEventListener("mousedown", function(event) {
         event.preventDefault()
         event.stopPropagation()
         startX = event.pageX
@@ -259,7 +258,8 @@ document.addEventListener("DOMContentLoaded", function() {
         } else if (event.which === 3) {
             rotate = true
         }
-    }).on("mousemove", function(event) {
+    });
+    document.body.addEventListener("mousemove", function(event) {
         event.preventDefault()
         event.stopPropagation()
         diffX = event.pageX - startX
@@ -271,81 +271,83 @@ document.addEventListener("DOMContentLoaded", function() {
         } else if (rotate) {
             rotateInCanvas(diffX, event.pageY)
         }
-    }).on("mouseup", function(event) {
+    });
+    document.body.addEventListener("mouseup", function(event) {
         event.preventDefault()
         event.stopPropagation()
         move = false
         rotate = false
-    }).on("mousewheel", function(event) {
+    });
+    document.body.addEventListener("wheel", function(event) {
         zoomInCanvas(event)
-    })
+    });
     
     var saveClick = function() {
         link = document.createElement("a")
         link.download = filename
         
-        canvas[0].toBlob(function(blob) {
+        canvas.toBlob(function(blob) {
             link.href = URL.createObjectURL(blob)
             link.click()
-            filenameLabel.html(filename + " (saved)")
+            filenameLabel.innerHTML = filename + " (saved)"
         }, "image/jpeg", 0.95)
     }
     
-    save.on("click", saveClick)
+    save.addEventListener("click", saveClick)
     
-    nextButton.on("click", function() {
+    nextButton.addEventListener("click", function() {
         fileListIndex++
         showFile()
     })
-    prevButton.on("click", function() {
+    prevButton.addEventListener("click", function() {
         fileListIndex--
         showFile()
     })
     
-    jQuery("body").on("keydown", function(event) {
-        // if (event.originalEvent.key == "c") {
-        //     if (outputText.val().indexOf(filename) === -1) {
-        //         outputText.append(filename + "\n")
+    document.body.addEventListener("keydown", function(event) {
+        // if (event.key == "c") {
+        //     if (outputText.value.indexOf(filename) === -1) {
+        //         outputText.value += filename + "\n"
         //         clipboardContent += filename + "\n"
         //         navigator.clipboard.writeText(clipboardContent)
-        //         //outputText[0].select()
+        //         //outputText.select()
         //         //document.execCommand("copy")
-        //         //outputText.empty()
+        //         //outputText.value = ""
         //     }
         // }
-        // if (event.originalEvent.key == "x") {
-        //     outputText.empty()
+        // if (event.key == "x") {
+        //     outputText.value = ""
         //     clipboardContent = ""
         //     navigator.clipboard.writeText("")
         // }
-        if (event.originalEvent.key == "s") {
+        if (event.key == "s") {
             saveClick()
         }
-        if (event.originalEvent.key == "ArrowRight" || 
-            event.originalEvent.key == "d") {
+        if (event.key == "ArrowRight" || 
+            event.key == "d") {
             fileListIndex++
             showFile()
         }
-        if (event.originalEvent.key == "ArrowLeft" ||
-            event.originalEvent.key == "a") {
+        if (event.key == "ArrowLeft" ||
+            event.key == "a") {
             fileListIndex--
             showFile()
         }
-        if (event.originalEvent.key == "q") {
-            jQuery(".line").toggle("hidden")
+        if (event.key == "q") {
+            document.querySelectorAll(".line").forEach(el => el.classList.toggle("hidden"));
             gridVisible = !gridVisible
         }
-        if (event.originalEvent.key == "Escape" || 
-            event.originalEvent.key == "Delete") {
+        if (event.key == "Escape" || 
+            event.key == "Delete") {
             event.preventDefault()
             event.stopPropagation()
             location.reload()
         }
     })
     
-    // copyButton.on("click", function() {
-    //     outputText[0].select()
+    // copyButton.addEventListener("click", function() {
+    //     outputText.select()
     //     document.execCommand("copy")
-    //     outputText.empty()
+    //     outputText.value = ""
     // })
 })

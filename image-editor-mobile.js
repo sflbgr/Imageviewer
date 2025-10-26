@@ -45,23 +45,18 @@ drawToCanvas = function() {
     sY = 0
     sWidth = natWidth
     sHeight = natHeight
-    if ( (natWidth / natHeight) < (svh / svw) ) {
-        cHeight = natHeight
-        cWidth = cHeight / svh * svw
-        dX = -((natWidth - cWidth) / 2)
-        dY = 0
-        dWidth = sWidth
-        dHeight = sHeight
-    } else {
-        cWidth = natWidth
-        cHeight = cWidth / svw * svh
-        dX = 0
-        dY = -((natHeight - cHeight) / 2)
-        dWidth = sWidth
-        dHeight = sHeight
-    }
-    canvas.width = cWidth
-    canvas.height = cHeight
+    // Canvas-Größe: immer doppelte Bildschirmgröße
+    cWidth = window.innerWidth * 2;
+    cHeight = cWidth / svw * svh;
+    canvas.width = cWidth;
+    canvas.height = cHeight;
+
+    // Bild so skalieren, dass es in den Canvas passt ("cover")
+    let scale = cHeight / natHeight;
+    dHeight = cHeight;
+    dWidth = natWidth * scale;
+    dX = (cWidth - dWidth) / 2;
+    dY = 0;
     df = cHeight / eHeight
     context.clearRect(0, 0, cWidth, cHeight)
     context.save();
@@ -262,21 +257,18 @@ document.addEventListener("DOMContentLoaded", function() {
             event.preventDefault()
             event.stopPropagation()
             
-            fileList = event.dataTransfer.files
-            fileListIndex = 0
-            
-            showFile()
-            
-            return false
-        }
-    })
-    droparea.addEventListener("dragend", function(event) {
-        if (!move) {
-            event.preventDefault()
-            event.stopPropagation()
-            
-            fileList = event.dataTransfer.files
-            fileListIndex = 0
+            // Canvas-Größe: doppelte Bildschirmgröße
+            cWidth = window.innerWidth * 2;
+            cHeight = window.innerHeight * 2;
+            canvas.width = cWidth;
+            canvas.height = cHeight;
+
+            // Bild so skalieren, dass es in den Canvas passt ("cover"-Logik)
+            let scale = Math.min(cWidth / natWidth, cHeight / natHeight);
+            let drawWidth = natWidth * scale;
+            let drawHeight = natHeight * scale;
+            let offsetX = (cWidth - drawWidth) / 2 + dX;
+            let offsetY = (cHeight - drawHeight) / 2 + dY;
             
             showFile()
             

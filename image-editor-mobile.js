@@ -11,6 +11,8 @@ let clipboardContent = ""
 let move = false, rotate = false, zoom = false
 let gridVisible = true
 let initialDistance = 0, initialAngle = 0
+let currentScale = 1;
+let currentRotation = 0;
 
 function getAngle(x1, y1, x2, y2) {
     return Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
@@ -35,19 +37,14 @@ const headerHeight = 90
 
 
 drawToCanvas = function() {
-    
     deg = 0
-    
     natWidth = image.naturalWidth
     natHeight = image.naturalHeight
-    
     ratio = natWidth / natHeight
-    
     sX = 0
     sY = 0
     sWidth = natWidth
     sHeight = natHeight
-    
     if ( (natWidth / natHeight) < (svh / svw) ) {
         cHeight = natHeight
         cWidth = cHeight / svh * svw
@@ -63,35 +60,34 @@ drawToCanvas = function() {
         dWidth = sWidth
         dHeight = sHeight
     }
-    
     canvas.width = cWidth
     canvas.height = cHeight
-    
     df = cHeight / eHeight
-    
     context.clearRect(0, 0, cWidth, cHeight)
-    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
-    
-    
+    context.save();
+    context.translate(cWidth / 2, cHeight / 2);
+    context.rotate(currentRotation * Math.PI / 180);
+    context.scale(currentScale, currentScale);
+    context.translate(-cWidth / 2, -cHeight / 2);
+    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight);
+    context.restore();
 }
 
 moveInCanvas = function(diffX, diffY) {
-    
-	if (cWidth != dWidth) {
-		dX = dX + (diffX * df)
-	}
-    if (cHeight != dHeight) {
-		dY = dY + (diffY * df)
-	}
-	
+    // Verschiebung muss durch den aktuellen Zoomfaktor geteilt werden
+    dX = dX + (diffX * df) / currentScale;
+    dY = dY + (diffY * df) / currentScale;
     context.clearRect(0, 0, cWidth, cHeight)
-    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
-    
-    
+    context.save();
+    context.translate(cWidth / 2, cHeight / 2);
+    context.rotate(currentRotation * Math.PI / 180);
+    context.scale(currentScale, currentScale);
+    context.translate(-cWidth / 2, -cHeight / 2);
+    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight);
+    context.restore();
 }
 
 zoomInCanvas = function(delta, eventPageX, eventPageY) {
-    
     let x = 20;
     if (event && event.altKey) {
         x = 1;
@@ -100,39 +96,40 @@ zoomInCanvas = function(delta, eventPageX, eventPageY) {
         x = 100;
     }
     x *= df;
-    
     // Use passed coordinates for touch, otherwise get from mouse event
     const rect = canvas.getBoundingClientRect();
     const pageX = eventPageX !== undefined ? eventPageX : event.pageX;
     const pageY = eventPageY !== undefined ? eventPageY : event.pageY;
-
     mouseX = (pageX - rect.left) * df;
     mouseY = (pageY - rect.top) * df;
-
     fx = (mouseX - dX) / dWidth;
     fy = (mouseY - dY) / dHeight;
-    
     if (delta > 0) {
         dHeight = dHeight + x;
         diffX = (dHeight * ratio) - dWidth;
         dWidth = dHeight * ratio;
         dY = dY - (x * fy);
         dX = dX - (diffX * fx);
+        currentScale *= 1.05;
     } else {
         dHeight = dHeight - x;
         diffX = dWidth - (dHeight * ratio);
         dWidth = dHeight * ratio;
         dY = dY + (x * fy);
         dX = dX + (diffX * fx);
+        currentScale *= 0.95;
     }
-    
     context.clearRect(0, 0, cWidth, cHeight);
+    context.save();
+    context.translate(cWidth / 2, cHeight / 2);
+    context.rotate(currentRotation * Math.PI / 180);
+    context.scale(currentScale, currentScale);
+    context.translate(-cWidth / 2, -cHeight / 2);
     context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight);
-    
+    context.restore();
 }
 
 rotateInCanvas = function(diffX, posY) {
-    
     x = 0.25
     if (event.shiftKey) {
         x = 0.5
@@ -140,24 +137,28 @@ rotateInCanvas = function(diffX, posY) {
     if (event.altKey) {
         x = 1
     }
-    
-    
     if (posY < eHeight/2) {
         deg = (diffX > 0) ? x : -x
     } else {
         deg = (diffX > 0) ? -x : x
     }
-    
-    context.translate(cWidth / 2, cHeight / 2)
-    context.rotate(deg * Math.PI / 180)
-    context.translate(-(cWidth / 2), -(cHeight / 2))
-    
+    currentRotation += deg;
     context.clearRect(0, 0, cWidth, cHeight)
-    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
-    
+    context.save();
+    context.translate(cWidth / 2, cHeight / 2);
+    context.rotate(currentRotation * Math.PI / 180);
+    context.scale(currentScale, currentScale);
+    context.translate(-cWidth / 2, -cHeight / 2);
+    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight);
+    context.restore();
 }
 
 showFile = function() {
+    // Werte für Zoom, Drehung und Verschiebung zurücksetzen
+    currentScale = 1;
+    currentRotation = 0;
+    dX = 0;
+    dY = 0;
     
     if (fileListIndex >= 0 && fileListIndex < fileList.length) {
         filename = fileList[fileListIndex].name
@@ -170,7 +171,7 @@ showFile = function() {
         
         url = URL.createObjectURL(fileList[fileListIndex])
         image.addEventListener("load", function() {
-            drawToCanvas()
+            drawToCanvas();
         })
         image.src = url
         
@@ -226,6 +227,8 @@ document.addEventListener("DOMContentLoaded", function() {
             fileListIndex = 0;
             showFile();
         }
+        // Nach jeder Dateiauswahl grundsätzlich in den Vollbildmodus wechseln
+        document.documentElement.requestFullscreen();
     });
 
     canvas = document.querySelector("#edit-canvas")
@@ -366,31 +369,22 @@ document.addEventListener("DOMContentLoaded", function() {
             startY = touches[0].pageY;
             moveInCanvas(diffX, diffY);
         } else if ((zoom || rotate) && touches.length === 2) {
-            // Zoom
             const currentDistance = getDistance(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY);
-            const zoomFactor = currentDistance - initialDistance;
-            const centerX = (touches[0].pageX + touches[1].pageX) / 2;
-            const centerY = (touches[0].pageY + touches[1].pageY) / 2;
-            
-            // Use a threshold to avoid overly sensitive zooming
-            if (Math.abs(zoomFactor) > 5) {
-                 zoomInCanvas(zoomFactor, centerX, centerY);
-                 initialDistance = currentDistance;
-            }
-
-            // Rotate
+            const zoomFactor = currentDistance / initialDistance;
+            currentScale *= zoomFactor;
+            initialDistance = currentDistance;
             const currentAngle = getAngle(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY);
             const angleDiff = currentAngle - initialAngle;
-            
-            // Use a threshold to avoid jitter
-            if (Math.abs(angleDiff) > 1) {
-                context.translate(cWidth / 2, cHeight / 2);
-                context.rotate(angleDiff * Math.PI / 180);
-                context.translate(-(cWidth / 2), -(cHeight / 2));
-                context.clearRect(0, 0, cWidth, cHeight);
-                context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight);
-                initialAngle = currentAngle;
-            }
+            currentRotation += angleDiff;
+            initialAngle = currentAngle;
+            context.clearRect(0, 0, cWidth, cHeight);
+            context.save();
+            context.translate(cWidth / 2, cHeight / 2);
+            context.rotate(currentRotation * Math.PI / 180);
+            context.scale(currentScale, currentScale);
+            context.translate(-cWidth / 2, -cHeight / 2);
+            context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight);
+            context.restore();
         }
     }, { passive: false });
 

@@ -43,11 +43,11 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    color: #ccc;
+    color: #959595;
     z-index: 998;
 }
 #edit-canvas {
-    background-color: #fff;
+    background-color: #000;
 }
 #background {
     display: block;
@@ -60,7 +60,7 @@ body {
     position: fixed;
     left: 5px;
     bottom: 5px;
-    color: #fff;
+    color: #959595;
 }
 #next-button, #prev-button {
     position: absolute;

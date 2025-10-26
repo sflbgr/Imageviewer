@@ -227,8 +227,6 @@ document.addEventListener("DOMContentLoaded", function() {
             fileListIndex = 0;
             showFile();
         }
-        // Nach jeder Dateiauswahl grundsätzlich in den Vollbildmodus wechseln
-        document.documentElement.requestFullscreen();
     });
 
     canvas = document.querySelector("#edit-canvas")

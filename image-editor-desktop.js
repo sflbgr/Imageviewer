@@ -17,8 +17,8 @@ drawToCanvas = function() {
     
     degree = 0
     
-    natWidth = image[0].naturalWidth
-    natHeight = image[0].naturalHeight
+    natWidth = image.naturalWidth
+    natHeight = image.naturalHeight
     
     ratio = natWidth / natHeight
     
@@ -45,8 +45,8 @@ drawToCanvas = function() {
     
     px = cHeight / 1080
     
-    canvas[0].width = cWidth
-    canvas[0].height = cHeight
+    canvas.width = cWidth
+    canvas.height = cHeight
     
     df = cHeight / eHeight
     
@@ -88,7 +88,7 @@ drawImage = function() {
         context.translate(-(cWidth / 2), -(cHeight / 2))
     }
     
-    context.drawImage(image[0], sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
+    context.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight)
     
     context.restore()
     
@@ -123,13 +123,14 @@ zoomInCanvas = function(event) {
     }
     x *= df
     
-    mouseX = (event.pageX - canvas.offset().left) * df
-    mouseY = (event.pageY - canvas.offset().top) * df
+    const rect = canvas.getBoundingClientRect();
+    mouseX = (event.pageX - rect.left) * df
+    mouseY = (event.pageY - rect.top) * df
 
     fx = (mouseX - dX) / dWidth
     fy = (mouseY - dY) / dHeight
     
-    if (event.originalEvent.deltaY < 0) {
+    if (event.deltaY < 0) {
         dHeight = dHeight + x
         diffX = (dHeight * ratio) - dWidth
         dWidth = dHeight * ratio
@@ -173,17 +174,17 @@ showFile = function() {
     
     if (fileListIndex >= 0 && fileListIndex < fileList.length) {
         filename = fileList[fileListIndex].name
-        filenameLabel.html(filename)
+        filenameLabel.innerHTML = filename
         
         url = URL.createObjectURL(fileList[fileListIndex])
-        image.on("load", function() {
+        image.addEventListener("load", function() {
             drawToCanvas()
         })
-        image.attr("src", url)
-        imageNumber.html((fileListIndex+1) + "/" + fileList.length)
+        image.src = url
+        imageNumber.innerHTML = ((fileListIndex+1) + "/" + fileList.length)
 
         if (!gridVisible) {
-            jQuery(".line").toggle("hidden")
+            document.querySelectorAll(".line").forEach(el => el.classList.toggle("hidden"));
             gridVisible = !gridVisible
         }
 
@@ -204,88 +205,91 @@ drawRect = function(x, y) {
 resize = function() {
     if (window.innerHeight == screen.height) {
         eWidth = window.innerWidth
-        jQuery("body").addClass("fullscreen")
+        document.body.classList.add("fullscreen")
     } else {
         eWidth = window.innerWidth - taskbarHeight
-        jQuery("body").removeClass("fullscreen")
+        document.body.classList.remove("fullscreen")
     }
     eHeight = eWidth / 16 * 9
-    jQuery("#wrapper, #edit-canvas").css({
-        height: eHeight + "px",
-        width: eWidth + "px"
-    })
-    jQuery("#taskbar").css({
-        width: eWidth + "px",
-        height: (eHeight / 1080 * taskbarHeight) + "px"
-    })
-    jQuery("#line-vert-1").css({
-        left: eWidth / 3
-    })
-    jQuery("#line-vert-2").css({
-        left: eWidth / 2
-    })
-    jQuery("#line-vert-3").css({
-        left: eWidth / 3 * 2
-    })
-    jQuery("#line-horz-1").css({
-        top: eHeight / 3
-    })
-    jQuery("#line-horz-2").css({
-        top: eHeight / 3 * 2
-    })
+    
+    const elementsToResize = document.querySelectorAll("#wrapper, #edit-canvas");
+    elementsToResize.forEach(el => {
+        el.style.height = eHeight + "px";
+        el.style.width = eWidth + "px";
+    });
+
+    document.querySelector("#taskbar").style.width = eWidth + "px";
+    document.querySelector("#taskbar").style.height = (eHeight / 1080 * taskbarHeight) + "px";
+    
+    document.querySelector("#line-vert-1").style.left = eWidth / 3 + "px";
+    document.querySelector("#line-vert-2").style.left = eWidth / 2 + "px";
+    document.querySelector("#line-vert-3").style.left = (eWidth / 3) * 2 + "px";
+    document.querySelector("#line-horz-1").style.top = eHeight / 3 + "px";
+    document.querySelector("#line-horz-2").style.top = (eHeight / 3) * 2 + "px";
 }
 
 document.addEventListener("DOMContentLoaded", function() {
     
-    droparea = jQuery("#droparea")
-    image = jQuery("#my_image")
-    save = jQuery("#save")
-    filenameLabel = jQuery("#filename")
-    wrapper = jQuery("#wrapper")
-    imageNumber = jQuery("#image-number")
+    droparea = document.querySelector("#droparea")
+    image = document.querySelector("#my_image")
+    save = document.querySelector("#save")
+    filenameLabel = document.querySelector("#filename")
+    wrapper = document.querySelector("#wrapper")
+    imageNumber = document.querySelector("#image-number")
     
-    canvas = jQuery("#edit-canvas")
-    context = canvas[0].getContext("2d")
-    frameOffsetX = canvas[0].getBoundingClientRect().x + 10
+    canvas = document.querySelector("#edit-canvas")
+    context = canvas.getContext("2d")
+    frameOffsetX = canvas.getBoundingClientRect().x + 10
     drawOffsetX = 0
     drawOffsetY = 0
                 
-    jQuery(window).on("resize", function() {
-        resize()
-    })
+    window.addEventListener("resize", resize)
     resize()
     
-    jQuery(window).on("contextmenu", function() {
+    window.addEventListener("contextmenu", function(event) {
+        event.preventDefault()
         return false
     })
     
-    droparea.on("drop dragend", function(event) {
+    droparea.addEventListener("drop", function(event) {
         if (!move) {
             event.preventDefault()
             event.stopPropagation()
             
-            fileList = event.originalEvent.dataTransfer.files
+            fileList = event.dataTransfer.files
             fileListIndex = 0
             
             showFile()
             
             return false
-            
-            
         }
-    }).on("dragover", function(event) {
+    })
+    droparea.addEventListener("dragend", function(event) {
         if (!move) {
             event.preventDefault()
             event.stopPropagation()
         }
-    }).on("dragleave dragend", function(event) {
+    })
+    droparea.addEventListener("dragover", function(event) {
+        if (!move) {
+            event.preventDefault()
+            event.stopPropagation()
+        }
+    })
+    droparea.addEventListener("dragleave", function(event) {
+        if (!move) {
+            event.preventDefault()
+            event.stopPropagation()
+        }
+    })
+    droparea.addEventListener("dragend", function(event) {
         if (!move) {
             event.preventDefault()
             event.stopPropagation()
         }
     })
     
-    jQuery("body").on("mousedown", function(event) {
+    document.body.addEventListener("mousedown", function(event) {
         event.preventDefault()
         event.stopPropagation()
         startX = event.pageX
@@ -298,7 +302,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 // draw frame
                 frameOffsetX = event.pageX
                 drawFrame = true
-                drawOffsetX = canvas[0].getBoundingClientRect().x
+                drawOffsetX = canvas.getBoundingClientRect().x
                 drawImage()
             } else {
                 if (event.altKey) {
@@ -307,8 +311,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     } else {
                         draw = 1 // draw black area at the left side
                     }
-                    drawOffsetX = canvas[0].getBoundingClientRect().x
-                    drawOffsetY = canvas[0].getBoundingClientRect().y
+                    drawOffsetX = canvas.getBoundingClientRect().x
+                    drawOffsetY = canvas.getBoundingClientRect().y
                 } else {
                     move = true
                 }
@@ -316,7 +320,8 @@ document.addEventListener("DOMContentLoaded", function() {
         } else if (event.which === 3) {
             rotate = true
         }
-    }).on("mousemove", function(event) {
+    })
+    document.body.addEventListener("mousemove", function(event) {
         event.preventDefault()
         event.stopPropagation()
         if (event.altKey && frame && drawFrame) {
@@ -336,13 +341,14 @@ document.addEventListener("DOMContentLoaded", function() {
                     rotateInCanvas(diffX, event.pageY)
                 } else if (frameMoving) {
                     frameMoved = true
-                    jQuery("#frame-moved").removeClass("hidden")
+                    document.querySelector("#frame-moved").classList.remove("hidden")
                     frameOffsetX += diffX
                     drawImage()
                 }
             }
         }
-    }).on("mouseup", function(event) {
+    })
+    document.body.addEventListener("mouseup", function(event) {
         event.stopPropagation()
         event.preventDefault()
         move = false
@@ -350,7 +356,8 @@ document.addEventListener("DOMContentLoaded", function() {
         draw = false
         drawFrame = false
         frameMoving = false
-    }).on("wheel", function(event) {
+    })
+    document.body.addEventListener("wheel", function(event) {
         zoomInCanvas(event)
     })
     
@@ -358,15 +365,15 @@ document.addEventListener("DOMContentLoaded", function() {
         link = document.createElement("a")
         link.download = filename
         
-        canvas[0].toBlob(function(blob) {
+        canvas.toBlob(function(blob) {
             link.href = URL.createObjectURL(blob)
             link.click()
-            filenameLabel.html(filename + " (saved)")
+            filenameLabel.innerHTML = filename + " (saved)"
         }, "image/jpeg", 0.95)
     }
     
-    jQuery("body").on("keydown", function(event) {
-        let key = event.originalEvent.key
+    document.body.addEventListener("keydown", function(event) {
+        let key = event.key
         if (key == "s") {   // save file
             saveClick()
         }
@@ -399,7 +406,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
         if (key == "q") { // show / hide gridlines
-            jQuery(".line").toggle("hidden")
+            document.querySelectorAll(".line").forEach(el => el.classList.toggle("hidden"));
             gridVisible = !gridVisible
         }
         if (key == "Escape" ||  // reload page
@@ -410,7 +417,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         if (key == "f") {  // enable / disable frame mode
             frame = !frame
-            jQuery("#frame-mode").toggle("hidden")
+            document.querySelector("#frame-mode").classList.toggle("hidden")
             drawImage()
         }
         if (key == "m" || key == "g") {
@@ -418,13 +425,13 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         if (key == "r") {
             frameMoved = false
-            jQuery("#frame-moved").addClass("hidden")
+            document.querySelector("#frame-moved").classList.add("hidden")
             frameOffsetX = ((cWidth - frameWidth) / 2) / df
             drawImage()
         }
     })
-    jQuery("body").on("keyup", function(event) {
-        let key = event.originalEvent.key
+    document.body.addEventListener("keyup", function(event) {
+        let key = event.key
         if (key == "m" || key == "g") {
             moveFrame = false
         }

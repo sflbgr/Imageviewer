@@ -1,0 +1,36 @@
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<link href="image-editor-mobile.css" rel="stylesheet" type="text/css">
+	<script src="image-editor-mobile.js"></script>
+</head>
+<body>
+	<div id="image-number"></div>
+	<div id="droparea">
+		<div id="wrapper">
+		<img id="my_image" src="1266037.jpg">
+		<canvas id="edit-canvas"></canvas>
+		<div id="line-vert-1" class="line"></div>
+		<div id="line-vert-2" class="line"></div>
+		<div id="line-vert-3" class="line"></div>
+		<div id="line-horz-1" class="line"></div>
+		<div id="line-horz-2" class="line"></div>
+		<img id="background" src="backgroundS20FE.png">
+		</div>
+		<button id="file-select-button">+</button>
+		<button id="fullscreen-button" aria-label="Vollbild umschalten"></button>
+		<button id="save-button" aria-label="Bild speichern"></button>
+		<button id="prev-button" aria-label="Voriges Bild"></button>
+		<button id="next-button" aria-label="Nächstes Bild"></button>
+		<input type="file" id="file-input" multiple accept="image/*" style="display: none;">
+	</div>
+	<div id="filename"></div>
+	<!-- <div id="copy-filenames">Copy</div>
+	<textarea id="output-text"></textarea>
+	<div id="next-image-wrapper">
+		<img id="next-image-1" class="next-image">
+		<img id="next-image-2" class="next-image">
+		<img id="next-image-3" class="next-image">
+	</div> -->
+</body>
+</html>

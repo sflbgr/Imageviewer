@@ -46,7 +46,7 @@ drawToCanvas = function() {
     sWidth = natWidth
     sHeight = natHeight
     // Canvas-Größe: immer doppelte Bildschirmgröße
-    cWidth = window.innerWidth * 2;
+    cWidth = (window.innerWidth * 4 < natWidth) ?  window.innerWidth * 4 : natWidth;
     cHeight = cWidth / svw * svh;
     canvas.width = cWidth;
     canvas.height = cHeight;

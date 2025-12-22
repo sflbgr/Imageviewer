@@ -13,13 +13,15 @@ let gridVisible = true
 let initialDistance = 0, initialAngle = 0
 let currentScale = 1;
 let currentRotation = 0;
+let imageHasChanges = false; // Verfolgt ob das aktuelle Bild verändert wurde
 
 // IndexedDB variables
 let db;
 const DB_NAME = 'ImageViewerDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const IMAGES_STORE = 'images';
 const INDEX_STORE = 'currentIndex';
+const TRANSFORMS_STORE = 'transformations';
 
 function getAngle(x1, y1, x2, y2) {
     return Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
@@ -62,8 +64,13 @@ drawToCanvas = function() {
     let scale = cHeight / natHeight;
     dHeight = cHeight;
     dWidth = natWidth * scale;
-    dX = (cWidth - dWidth) / 2;
-    dY = 0;
+    
+    // Standard-Position nur setzen wenn alle Transformationen auf Standardwerten stehen
+    if (currentScale === 1 && currentRotation === 0 && dX === 0 && dY === 0) {
+        dX = (cWidth - dWidth) / 2;
+        dY = 0;
+    }
+    
     df = cHeight / eHeight
     context.clearRect(0, 0, cWidth, cHeight)
     context.save();
@@ -79,6 +86,7 @@ moveInCanvas = function(diffX, diffY) {
     // Verschiebung muss durch den aktuellen Zoomfaktor geteilt werden
     dX = dX + (diffX * df) / currentScale;
     dY = dY + (diffY * df) / currentScale;
+    imageHasChanges = true; // Bild wurde verändert
     context.clearRect(0, 0, cWidth, cHeight)
     context.save();
     context.translate(cWidth / 2, cHeight / 2);
@@ -121,6 +129,7 @@ zoomInCanvas = function(delta, eventPageX, eventPageY) {
         dX = dX + (diffX * fx);
         currentScale *= 0.95;
     }
+    imageHasChanges = true; // Bild wurde verändert
     context.clearRect(0, 0, cWidth, cHeight);
     context.save();
     context.translate(cWidth / 2, cHeight / 2);
@@ -145,6 +154,7 @@ rotateInCanvas = function(diffX, posY) {
         deg = (diffX > 0) ? -x : x
     }
     currentRotation += deg;
+    imageHasChanges = true; // Bild wurde verändert
     context.clearRect(0, 0, cWidth, cHeight)
     context.save();
     context.translate(cWidth / 2, cHeight / 2);
@@ -155,16 +165,14 @@ rotateInCanvas = function(diffX, posY) {
     context.restore();
 }
 
-showFile = function() {
-    // Werte für Zoom, Drehung und Verschiebung zurücksetzen
-    currentScale = 1;
-    currentRotation = 0;
-    dX = 0;
-    dY = 0;
-    
+showFile = async function() {
     if (fileListIndex >= 0 && fileListIndex < fileList.length) {
+        // Aktuelle Transformationen für das vorherige Bild speichern (nur wenn Änderungen vorgenommen wurden)
+        if (imageHasChanges && filename) {
+            saveImageTransformations();
+        }
+        
         filename = fileList[fileListIndex].name
-        filenameLabel.innerHTML = filename
         
         if (url) {
             URL.revokeObjectURL(url)
@@ -172,10 +180,50 @@ showFile = function() {
         }
         
         url = URL.createObjectURL(fileList[fileListIndex])
-        image.addEventListener("load", function() {
+        
+        // Change-Flag zurücksetzen für das neue Bild
+        imageHasChanges = false;
+        
+        // Transformationen sofort zurücksetzen, bevor das neue Bild geladen wird
+        currentScale = 1;
+        currentRotation = 0;
+        dX = 0;
+        dY = 0;
+        
+        // Funktion für den load-Event definieren
+        const handleImageLoad = async function() {
+            // Event Listener nach einmaligem Aufruf entfernen
+            image.removeEventListener("load", handleImageLoad);
+            
+            // Erst das Bild mit Standardwerten zeichnen
             drawToCanvas();
-        })
-        image.src = url
+            
+            // Dann gespeicherte Transformationen laden und anwenden
+            const savedTransform = await loadImageTransformations(filename);
+            if (savedTransform) {
+                currentScale = savedTransform.scale || 1;
+                currentRotation = savedTransform.rotation || 0;
+                dX = savedTransform.dX || 0;
+                dY = savedTransform.dY || 0;
+                
+                // Save-State wiederherstellen
+                if (savedTransform.saved) {
+                    filenameLabel.innerHTML = filename + " (saved)";
+                } else {
+                    filenameLabel.innerHTML = filename;
+                }
+                
+                // Bild mit wiederhergestellten Transformationen neu zeichnen
+                drawToCanvas();
+            } else {
+                // Standardwerte bleiben gesetzt
+                filenameLabel.innerHTML = filename;
+            }
+        };
+        
+        // Event Listener hinzufügen
+        image.addEventListener("load", handleImageLoad);
+        image.src = url;
         
         if (!gridVisible) {
             document.querySelectorAll(".line").forEach(el => el.classList.toggle("hidden"))
@@ -219,6 +267,11 @@ initDB = function() {
             // Store für aktuellen Index
             if (!db.objectStoreNames.contains(INDEX_STORE)) {
                 db.createObjectStore(INDEX_STORE, { keyPath: 'id' });
+            }
+            
+            // Store für Bildtransformationen
+            if (!db.objectStoreNames.contains(TRANSFORMS_STORE)) {
+                db.createObjectStore(TRANSFORMS_STORE, { keyPath: 'filename' });
             }
         };
     });
@@ -332,6 +385,69 @@ clearCurrentIndex = function() {
     store.clear();
 };
 
+saveImageTransformations = function() {
+    if (!db || !filename) return;
+    
+    const transaction = db.transaction([TRANSFORMS_STORE], 'readwrite');
+    const store = transaction.objectStore(TRANSFORMS_STORE);
+    
+    const transformData = {
+        filename: filename,
+        scale: currentScale,
+        rotation: currentRotation,
+        dX: dX,
+        dY: dY,
+        saved: filenameLabel.innerHTML.includes('(saved)'),
+        timestamp: Date.now()
+    };
+    
+    store.put(transformData);
+};
+
+loadImageTransformations = function(imageFilename) {
+    if (!db || !imageFilename) return Promise.resolve(null);
+    
+    return new Promise((resolve) => {
+        const transaction = db.transaction([TRANSFORMS_STORE], 'readonly');
+        const store = transaction.objectStore(TRANSFORMS_STORE);
+        const request = store.get(imageFilename);
+        
+        request.onsuccess = () => {
+            resolve(request.result);
+        };
+        
+        request.onerror = () => resolve(null);
+    });
+};
+
+clearImageTransformations = function() {
+    if (!db) return;
+    
+    const transaction = db.transaction([TRANSFORMS_STORE], 'readwrite');
+    const store = transaction.objectStore(TRANSFORMS_STORE);
+    store.clear();
+};
+
+markImageAsSaved = function() {
+    if (!db || !filename) return;
+    
+    const transaction = db.transaction([TRANSFORMS_STORE], 'readwrite');
+    const store = transaction.objectStore(TRANSFORMS_STORE);
+    
+    const transformData = {
+        filename: filename,
+        scale: currentScale,
+        rotation: currentRotation,
+        dX: dX,
+        dY: dY,
+        saved: true,
+        timestamp: Date.now()
+    };
+    
+    store.put(transformData);
+    imageHasChanges = true; // Als Änderung markieren, da Save-Status geändert wurde
+};
+
 document.addEventListener("DOMContentLoaded", async function() {
     
     droparea = document.querySelector("#droparea")
@@ -392,6 +508,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             try {
                 await saveImagesToDB(fileList);
                 clearCurrentIndex(); // Index zurücksetzen
+                clearImageTransformations(); // Transformationen zurücksetzen
             } catch (error) {
                 console.error('Fehler beim Speichern der Bilder:', error);
             }
@@ -543,6 +660,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             const angleDiff = currentAngle - initialAngle;
             currentRotation += angleDiff;
             initialAngle = currentAngle;
+            imageHasChanges = true; // Bild wurde verändert
             context.clearRect(0, 0, cWidth, cHeight);
             context.save();
             context.translate(cWidth / 2, cHeight / 2);
@@ -597,6 +715,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             link.href = URL.createObjectURL(blob);
             link.click();
             filenameLabel.innerHTML = filename + " (saved)";
+            markImageAsSaved(); // Als gespeichert in der DB markieren
         }, "image/jpeg", 0.95);
     }
     

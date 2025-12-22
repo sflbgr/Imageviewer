@@ -280,22 +280,21 @@ initDB = function() {
 saveImagesToDB = async function(files) {
     if (!db) return;
     
-    // Erst alle Dateien zu ArrayBuffer konvertieren (außerhalb der Transaktion)
+    // File-Objekte direkt in Array sammeln (viel schneller)
     const imageDataArray = [];
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const arrayBuffer = await file.arrayBuffer();
         
         imageDataArray.push({
             name: file.name,
             type: file.type,
             size: file.size,
-            data: arrayBuffer,
+            data: file, // File-Objekt direkt speichern
             index: i
         });
     }
     
-    // Dann in einer Transaktion speichern
+    // In einer Transaktion speichern
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([IMAGES_STORE], 'readwrite');
         const store = transaction.objectStore(IMAGES_STORE);
@@ -326,10 +325,8 @@ loadImagesFromDB = async function() {
             // Nach Index sortieren
             imageData.sort((a, b) => a.index - b.index);
             
-            // File-Objekte aus den gespeicherten Daten erstellen
-            const files = imageData.map(data => {
-                return new File([data.data], data.name, { type: data.type });
-            });
+            // File-Objekte direkt zurückgeben
+            const files = imageData.map(data => data.data);
             
             resolve(files);
         };
@@ -770,6 +767,31 @@ document.addEventListener("DOMContentLoaded", async function() {
             location.reload()
         }
     })
+    
+    // Event Listener für das Speichern beim Schließen/Reload der Seite
+    window.addEventListener("beforeunload", function(event) {
+        // Aktuelle Transformationen speichern falls Änderungen vorgenommen wurden
+        if (imageHasChanges && filename) {
+            saveImageTransformations();
+        }
+    });
+    
+    // Event Listener für Visibility Changes (z.B. Tab wechseln)
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === 'hidden') {
+            // Seite wird verborgen - Transformationen speichern
+            if (imageHasChanges && filename) {
+                saveImageTransformations();
+            }
+        }
+    });
+    
+    // Zusätzlicher Event Listener für Page Hide
+    window.addEventListener("pagehide", function(event) {
+        if (imageHasChanges && filename) {
+            saveImageTransformations();
+        }
+    });
     
     // copyButton.addEventListener("click", function() {
     //     outputText.select()

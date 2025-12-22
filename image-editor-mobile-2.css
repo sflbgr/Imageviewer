@@ -1,0 +1,272 @@
+body {
+    background: #000;
+    font-family: "Courier";
+    padding: 0;
+    margin: 0;
+}
+#save {
+    position: fixed;
+    top: 5px;
+    right: 5px;
+    width: 80px;
+    height: 30px;
+    background-color: #ececec;
+    z-index: 999;
+    text-align: center;
+    cursor: pointer;
+    padding-top: 10px;
+    visibility: hidden;
+}
+#droparea {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #000;	
+}
+#wrapper {
+    width: 720px;
+    position: relative;
+    margin: 0 auto;
+    height: 1600px;
+    /*overflow: hidden;*/
+}
+#my_image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    height: 100%;
+    transform: rotate(0deg);
+    display: none;
+}
+#image-number {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #c5c5c5;
+    z-index: 998;
+    text-shadow: 0 0 4px #000;
+}
+#edit-canvas {
+    background-color: #000;
+}
+#background {
+    display: block;
+    position: absolute;
+    top: 0;	
+    width: 540px;			
+    height: 960px;
+}
+#filename {
+    position: fixed;
+    left: 0;
+    bottom: 2px;
+    color: #f1f1f1;
+    background-color: #3737377a;
+    font-size: 12px;
+    width: 100%;
+    text-align: center;
+    text-shadow: 0 0 5px #000;
+}
+#next-button, #prev-button {
+    position: absolute;
+    top: 574px;
+    /* transform: translateY(-50%); */
+    width: 50px;
+    height: 109px;
+    border-radius: 20px;
+    border: 2px solid white;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    cursor: pointer;
+}
+
+#next-button {
+    right: 5px;
+}
+
+#prev-button {
+    left: 5px;
+}
+
+#next-button::after, #prev-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    border-top: 4px solid white;
+    border-right: 4px solid white;
+}
+
+#next-button::after {
+    transform: translate(-75%, -50%) rotate(45deg);
+}
+
+#prev-button::after {
+    transform: translate(-25%, -50%) rotate(-135deg);
+}
+#output-text {
+   /* visibility: hidden; */
+    position: absolute;
+    left: 8px;
+    bottom: 30px;
+    width: 300px;
+    height: 150px;
+    background-color: #000;
+    color: #ddd;
+}
+#copy-filenames {
+    display: none;
+    position: absolute;
+    left: 8px;
+    bottom: 185px;
+    width: 50px;
+    height: 18px;
+    background-color: #ececec;
+    cursor: pointer;
+}
+#file-select-button {
+    position: absolute;
+    top: 37px;
+    left: 5px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid white;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 30px;
+    line-height: 48px;
+    text-align: center;
+    padding: 0;
+    z-index: 100;
+    cursor: pointer;
+}
+#fullscreen-button {
+    position: absolute;
+    top: 37px;
+    right: 5px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid white;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 0;
+    z-index: 100;
+    cursor: pointer;
+}
+
+#fullscreen-button::before,
+#fullscreen-button::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-color: white;
+    border-style: solid;
+}
+
+#fullscreen-button::before {
+    top: 10px;
+    right: 10px;
+    border-width: 3px 3px 0 0;
+}
+
+#fullscreen-button::after {
+    bottom: 10px;
+    left: 10px;
+    border-width: 0 0 3px 3px;
+}
+
+/* Style for when in fullscreen mode */
+body:fullscreen #fullscreen-button::before,
+:root:fullscreen #fullscreen-button::before {
+    top: 14px;
+    left: 14px;
+    border-width: 3px;
+}
+
+body:fullscreen #fullscreen-button::after,
+:root:fullscreen #fullscreen-button::after {
+    bottom: 14px;
+    right: 14px;
+    border-width: 3px 0 0 3px;
+    display: none;
+}
+
+#save-button {
+    position: absolute;
+    bottom: 23px;
+    right: 5px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid white;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 0;
+    z-index: 100;
+    cursor: pointer;
+}
+
+#save-button::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 12px 12px 12px;
+    border-color: transparent transparent white transparent;
+}
+
+#save-button::after {
+    content: '';
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 10px;
+    border: 2px solid white;
+    border-top: none;
+}
+
+.line {
+    background-color: #2f2f2f30;
+}
+.line.hidden {
+    display: none;
+}
+#line-vert-1, #line-vert-2, #line-vert-3 {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+}
+#line-horz-1, #line-horz-2 {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+}
+#next-image-wrapper {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 150px;
+}
+.next-image {
+    float: left;
+    height: 150px;
+}
+
+#droparea > button {
+    background-color: #a9a9a980;
+    border: none;
+}

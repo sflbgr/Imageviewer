@@ -1,0 +1,51 @@
+{
+    "name": "Image Viewer - Mobile Editor",
+    "short_name": "ImageViewer",
+    "description": "Mobile Image Editor mit Drag & Drop, Zoom, Rotation und Persistenz",
+    "start_url": "./image-editor-mobile-2.html",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#333333",
+    "orientation": "portrait",
+    "scope": "./",
+    "lang": "de",
+    "icons": [
+        {
+            "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjMzMzMzMzIi8+CjxyZWN0IHg9IjI0IiB5PSIyNCIgd2lkdGg9IjE0NCIgaGVpZ2h0PSIxNDQiIHJ4PSI4IiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iNCIgZmlsbD0ibm9uZSIvPgo8Y2lyY2xlIGN4PSI2NCIgY3k9IjY0IiByPSIxNiIgZmlsbD0iI0ZGRkZGRiIvPgo8cGF0aCBkPSJNMTI4IDEyOEwxNjggMTY4SDE2OFYxNjhMMTI4IDEyOFoiIGZpbGw9IiNGRkZGRkYiLz4KPC9zdmc+",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSIjMzMzMzMzIi8+CjxyZWN0IHg9IjY0IiB5PSI2NCIgd2lkdGg9IjM4NCIgaGVpZ2h0PSIzODQiIHJ4PSIyNCIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEyIiBmaWxsPSJub25lIi8+CjxjaXJjbGUgY3g9IjE3MiIgY3k9IjE3MiIgcj0iNDQiIGZpbGw9IiNGRkZGRkYiLz4KPHBhdGggZD0iTTM0MCAzNDBMNDQ4IDQ0OEg0NDhWNDQ4TDM0MCAzNDBaIiBmaWxsPSIjRkZGRkZGIi8+Cjwvc3ZnPg==",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["photo", "graphics"],
+    "screenshots": [
+        {
+            "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjU2OCIgdmlld0JveD0iMCAwIDMyMCA1NjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iNTY4IiBmaWxsPSIjMDAwMDAwIi8+CjxyZWN0IHg9IjE2IiB5PSI5NiIgd2lkdGg9IjI4OCIgaGVpZ2h0PSI0ODAiIHJ4PSI4IiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjE2MCIgeT0iMzAiIGZpbGw9IiNGRkZGRkYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCI+SW1hZ2UgVmlld2VyPC90ZXh0Pgo8L3N2Zz4=",
+            "sizes": "320x568",
+            "type": "image/svg+xml",
+            "form_factor": "narrow"
+        }
+    ],
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "shortcuts": [
+        {
+            "name": "Neues Bild",
+            "short_name": "Neu",
+            "description": "Neues Bild laden",
+            "url": "./image-editor-mobile-2.html?action=new",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMzMzMzMzIi8+CjxwYXRoIGQ9Ik00OCAyMFY3Nk00OCAyMFY3Nk0yMCA0OEg3NiIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
+}

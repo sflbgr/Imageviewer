@@ -483,6 +483,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     const fileInput = document.querySelector('#file-input');
     const fullscreenButton = document.querySelector('#fullscreen-button');
     const saveButton = document.querySelector('#save-button');
+    const clearButton = document.querySelector('#clear-button');
 
     fileSelectButton.addEventListener('click', function() {
         fileInput.click();
@@ -493,6 +494,49 @@ document.addEventListener("DOMContentLoaded", async function() {
             document.exitFullscreen();
         } else {
             document.documentElement.requestFullscreen();
+        }
+    });
+
+    clearButton.addEventListener('click', async function() {
+        if (confirm('Löschen')) {
+            try {
+                // Alle Datenbank-Stores leeren
+                await clearImagesFromDB();
+                clearCurrentIndex();
+                clearImageTransformations();
+                
+                // Variablen zurücksetzen
+                fileList = [];
+                fileListIndex = -1;
+                filename = null;
+                imageHasChanges = false;
+                currentScale = 1;
+                currentRotation = 0;
+                dX = 0;
+                dY = 0;
+                
+                // URL aufräumen
+                if (url) {
+                    URL.revokeObjectURL(url);
+                    url = null;
+                }
+                
+                // UI zurücksetzen
+                filenameLabel.innerHTML = '';
+                imageNumber.innerHTML = '';
+                
+                // Canvas leeren
+                if (canvas && context) {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                }
+                
+                // Bild zurücksetzen
+                image.src = '';
+                
+                console.log('Alle Datenbankeinträge wurden erfolgreich gelöscht.');
+            } catch (error) {
+                console.error('Fehler beim Löschen der Datenbankeinträge:', error);
+            }
         }
     });
 
@@ -792,6 +836,27 @@ document.addEventListener("DOMContentLoaded", async function() {
             saveImageTransformations();
         }
     });
+    
+    // Service Worker registrieren für Offline-Funktionalität
+    console.log('Starte Service Worker Registrierung...');
+    if ('serviceWorker' in navigator) {
+        console.log('Service Worker wird unterstützt');
+        navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+                console.log('Service Worker registriert:', registration);
+                console.log('SW Scope:', registration.scope);
+                console.log('SW State:', registration.installing ? 'installing' : 
+                           registration.waiting ? 'waiting' : 
+                           registration.active ? 'active' : 'unknown');
+            })
+            .catch(error => {
+                console.error('Service Worker Registrierung fehlgeschlagen:', error);
+                console.error('Error details:', error.message);
+                console.error('Error stack:', error.stack);
+            });
+    } else {
+        console.log('Service Worker wird NICHT unterstützt');
+    }
     
     // copyButton.addEventListener("click", function() {
     //     outputText.select()

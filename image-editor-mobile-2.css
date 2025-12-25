@@ -45,7 +45,9 @@ body {
     left: 0;
     color: #c5c5c5;
     z-index: 998;
-    text-shadow: 0 0 4px #000;
+    text-shadow: 0 0 5px #000;
+    background-color: #3737377a;
+    padding: 0 5px;
 }
 #edit-canvas {
     background-color: #000;
@@ -155,6 +157,7 @@ body {
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
     font-size: 30px;
+    font-weight: bold;
     line-height: 48px;
     text-align: center;
     padding: 0;

@@ -483,7 +483,9 @@ document.addEventListener("DOMContentLoaded", async function() {
     const fileInput = document.querySelector('#file-input');
     const fullscreenButton = document.querySelector('#fullscreen-button');
     const saveButton = document.querySelector('#save-button');
-    const clearButton = document.querySelector('#clear-button');
+    // const clearButton = document.querySelector('#clear-button');
+    const firstButton = document.querySelector('#first-button');
+    const lastButton = document.querySelector('#last-button');
 
     fileSelectButton.addEventListener('click', function() {
         fileInput.click();
@@ -496,7 +498,22 @@ document.addEventListener("DOMContentLoaded", async function() {
             document.documentElement.requestFullscreen();
         }
     });
+    
+    firstButton.addEventListener('click', function() {
+        if (fileList.length > 0) {
+            fileListIndex = 0;
+            showFile();
+        }
+    });
 
+    lastButton.addEventListener('click', function() {
+        if (fileList.length > 0) {
+            fileListIndex = fileList.length - 1;
+            showFile();
+        }
+    });
+
+    /*
     clearButton.addEventListener('click', async function() {
         if (confirm('Löschen')) {
             try {
@@ -539,6 +556,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             }
         }
     });
+    */
 
     fileInput.addEventListener('change', async function(event) {
         if (event.target.files.length > 0) {
@@ -764,10 +782,16 @@ document.addEventListener("DOMContentLoaded", async function() {
     
     nextButton.addEventListener("click", function() {
         fileListIndex++
+        if (fileListIndex >= fileList.length) {
+            fileListIndex = 0; // Zum Anfang zurückkehren
+        }
         showFile()
     })
     prevButton.addEventListener("click", function() {
         fileListIndex--
+        if (fileListIndex < 0) {
+            fileListIndex = fileList.length - 1; // Zum Ende zurückkehren
+        }
         showFile()
     })
     

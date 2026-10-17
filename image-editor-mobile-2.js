@@ -9,6 +9,7 @@ var outputText, copyButton, imageNumber
 let clipboardContent = ""
 
 let move = false, rotate = false, zoom = false
+let horizontalMoveOnly = false
 let gridVisible = true
 let initialDistance = 0, initialAngle = 0
 let currentScale = 1;
@@ -83,6 +84,9 @@ drawToCanvas = function() {
 }
 
 moveInCanvas = function(diffX, diffY) {
+    if (horizontalMoveOnly) {
+        diffY = 0;
+    }
     // Verschiebung muss durch den aktuellen Zoomfaktor geteilt werden
     dX = dX + (diffX * df) / currentScale;
     dY = dY + (diffY * df) / currentScale;
@@ -500,17 +504,24 @@ document.addEventListener("DOMContentLoaded", async function() {
     });
     
     firstButton.addEventListener('click', function() {
-        if (fileList.length > 0) {
-            fileListIndex = 0;
-            showFile();
-        }
+        horizontalMoveOnly = !horizontalMoveOnly;
+        firstButton.setAttribute('aria-pressed', String(horizontalMoveOnly));
+        firstButton.title = horizontalMoveOnly
+            ? 'Nur horizontales Verschieben aktiv'
+            : 'Verschieben in alle Richtungen aktiv';
     });
 
     lastButton.addEventListener('click', function() {
-        if (fileList.length > 0) {
-            fileListIndex = fileList.length - 1;
-            showFile();
-        }
+        if (!filename || !image.complete || !image.naturalWidth) return;
+
+        currentScale = 1;
+        currentRotation = 0;
+        dX = 0;
+        dY = 0;
+        drawToCanvas();
+        imageHasChanges = true;
+        filenameLabel.innerHTML = filename;
+        saveImageTransformations();
     });
 
     /*

@@ -200,6 +200,13 @@ body {
     z-index: 100;
     cursor: pointer;
 }
+#first-button::before {
+    content: '↔';
+}
+#first-button[aria-pressed="true"] {
+    border-color: #7dff7d;
+    color: #7dff7d;
+}
 #fullscreen-button {
     position: absolute;
     top: 37px;
